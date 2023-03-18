@@ -2,10 +2,14 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-client_scripts {
-    'client/main.lua'
+shared_script {
+    'config.lua'
 }
 
-server_scripts {
-    'server/main.lua',
+client_script {
+    'client/*.lua'
+}
+
+server_script {
+    'server/*.lua'
 }
