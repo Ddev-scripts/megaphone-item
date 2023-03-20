@@ -1,29 +1,25 @@
-local function EnableSubmix()
-    SetAudioSubmixEffectRadioFx(0, 0)
-    SetAudioSubmixEffectParamInt(0, 0, `default`, 1)
-    SetAudioSubmixEffectParamFloat(0, 0, `freq_low`, 200.0)
-    SetAudioSubmixEffectParamFloat(0, 0, `freq_hi`, 9000.0)
-    SetAudioSubmixEffectParamFloat(0, 0, `fudge`, 0.5)
-    SetAudioSubmixEffectParamFloat(0, 0, `rm_mix`, 19.0)
-end
-
 local function DisableSubmix()
     if IsEntityPlayingAnim(PlayerPedId(), "molly@megaphone", "megaphone_clip", 3) then
         StopEntityAnim(PlayerPedId(), "megaphone_clip", "molly@megaphone", -4.0)
     end
-    SetAudioSubmixEffectRadioFx(0, 0)
+    TriggerServerEvent('megaphone:applySubmix', false)
 end
 
 local usingMegaphone = false
-local megaphoneObject = nil
+local megaphoneObject = ni
 
 RegisterNetEvent('megaphone:use')
 AddEventHandler('megaphone:use', function()
     if usingMegaphone then
         DisableSubmix()
+        exports["pma-voice"]:clearProximityOverride()
     end
     usingMegaphone = not usingMegaphone
     CreateThread(function()
+        if usingMegaphone then
+            TriggerServerEvent('megaphone:applySubmix', true)
+            exports["pma-voice"]:overrideProximityRange(30.0, true)
+        end
         while usingMegaphone do
             if not IsEntityPlayingAnim(PlayerPedId(), "molly@megaphone", "megaphone_clip", 3) then
                 local playerPed = PlayerPedId()
@@ -54,7 +50,6 @@ AddEventHandler('megaphone:use', function()
 
                 RemoveAnimDict(animDict)
             end
-            EnableSubmix()
             Wait(100)
         end
 
@@ -62,6 +57,35 @@ AddEventHandler('megaphone:use', function()
             DeleteObject(megaphoneObject)
             megaphoneObject = nil
         end
-
     end)
+end)
+
+local data = {
+    [`default`] = 0,
+    [`freq_low`] = 0.0,
+    [`freq_hi`] = 10000.0,
+    [`rm_mod_freq`] = 300.0,
+    [`rm_mix`] = 0.2,
+    [`fudge`] = 0.0,
+    [`o_freq_lo`] = 200.0,
+    [`o_freq_hi`] = 5000.0,
+}
+
+local filter
+
+CreateThread(function()
+    filter = CreateAudioSubmix("Megaphone")
+    SetAudioSubmixEffectRadioFx(filter, 0)
+    for hash, value in pairs(data) do
+        SetAudioSubmixEffectParamInt(filter, 0, hash, 1)
+    end
+    AddAudioSubmixOutput(filter, 0)
+end)
+
+RegisterNetEvent('megaphone:updateSubmixStatus', function(state, source)
+    if state then
+        MumbleSetSubmixForServerId(source, filter)
+    else
+        MumbleSetSubmixForServerId(source, -1)
+    end
 end)
