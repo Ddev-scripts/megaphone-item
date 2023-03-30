@@ -90,6 +90,8 @@ RegisterNetEvent('megaphone:updateSubmixStatus', function(state, source)
     end
 end)
 
+
+-- TODO : ADD SAME FOR QBCORE
 AddEventHandler('esx:onPlayerDeath', function()
     usingMegaphone = false
     DisableSubmix()
