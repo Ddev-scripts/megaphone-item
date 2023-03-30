@@ -12,13 +12,13 @@ RegisterNetEvent('megaphone:use')
 AddEventHandler('megaphone:use', function()
     if usingMegaphone then
         DisableSubmix()
-        exports["pma-voice"]:clearProximityOverride()
+        exports["pma-voice"]:setMegaphone(false, 2)
     end
     usingMegaphone = not usingMegaphone
     CreateThread(function()
         if usingMegaphone then
             TriggerServerEvent('megaphone:applySubmix', true)
-            exports["pma-voice"]:overrideProximityRange(30.0, true)
+            exports["pma-voice"]:setMegaphone(true, 1)
         end
         while usingMegaphone do
             if not IsEntityPlayingAnim(PlayerPedId(), "molly@megaphone", "megaphone_clip", 3) then
@@ -88,4 +88,10 @@ RegisterNetEvent('megaphone:updateSubmixStatus', function(state, source)
     else
         MumbleSetSubmixForServerId(source, -1)
     end
+end)
+
+AddEventHandler('esx:onPlayerDeath', function()
+    usingMegaphone = false
+    DisableSubmix()
+    exports["pma-voice"]:setMegaphone(false, 2)
 end)
